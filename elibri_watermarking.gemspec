@@ -7,9 +7,9 @@ Gem::Specification.new do |s|
   s.version     = ElibriWatermarking::VERSION
   s.authors     = ["Piotr Szmielew"]
   s.email       = ["p.szmielew@ava.waw.pl"]
-  s.homepage    = ""
-  s.summary     = %q{TODO: Write a gem summary}
-  s.description = %q{TODO: Write a gem description}
+  s.homepage    = "http://elibri.com.pl"
+  s.summary     = %q{Gem designed to help in use of Elibri watermarking API.}
+  s.description = %q{Gem designed to help in use of Elibri watermarking API.}
 
   s.rubyforge_project = "elibri_watermarking"
 
