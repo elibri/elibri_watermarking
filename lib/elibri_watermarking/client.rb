@@ -1,4 +1,6 @@
 require 'net/http'
+require 'net/https'
+require 'uri'
 require 'digest/md5'
 
 module ElibriWatermarking
@@ -19,9 +21,15 @@ module ElibriWatermarking
       uri = URI(self.url + '/watermark')
       formats = formats.join(",") if formats.is_a?(Array)
       timestamp = Time.now.to_i
-      sig = Digest::MD5.hexdigest("#{self.secret}_#{timestamp}")
-      res = Net::HTTP.post_form(uri, ident_type => ident, 'formats' => formats, 'visible_watermark' => visible_watermark,
-        'title_postfix' => title_postfix, 'stamp' => timestamp, 'sig' => sig, 'token' => self.token)
+      sig = Digest::MD5.hexdigest("#{self.secret}_#{timestamp}")    
+      data = {ident_type => ident, 'formats' => formats, 'visible_watermark' => visible_watermark,
+        'title_postfix' => title_postfix, 'stamp' => timestamp, 'sig' => sig, 'token' => self.token}
+      req = Net::HTTP::Post.new(uri.path)
+      req.set_form_data(data)
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      res = http.start {|http| http.request(req) }
       return validate_response(res)
     end
     
@@ -29,7 +37,14 @@ module ElibriWatermarking
       uri = URI(self.url + '/deliver')
       timestamp = Time.now.to_i
       sig = Digest::MD5.hexdigest("#{self.secret}_#{timestamp}")
-      res = Net::HTTP.post_form(uri, 'stamp' => timestamp, 'sig' => sig, 'token' => self.token, 'trans_id' => trans_id)
+      data = {'stamp' => timestamp, 'sig' => sig, 'token' => self.token, 'trans_id' => trans_id}
+      req = Net::HTTP::Post.new(uri.path)
+      req = Net::HTTP::Post.new(uri.path)
+      req.set_form_data(data)
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      res = http.start {|http| http.request(req) }
       return validate_response(res)
     end
     
