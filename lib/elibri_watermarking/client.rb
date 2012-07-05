@@ -39,6 +39,19 @@ module ElibriWatermarking
       sig = Digest::MD5.hexdigest("#{self.secret}_#{timestamp}")
       data = {'stamp' => timestamp, 'sig' => sig, 'token' => self.token, 'trans_id' => trans_id}
       req = Net::HTTP::Post.new(uri.path)
+      req.set_form_data(data)
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      res = http.start {|http| http.request(req) }
+      return validate_response(res)
+    end
+    
+    def retry(trans_id)
+      uri = URI(self.url + '/retry')
+      timestamp = Time.now.to_i
+      sig = Digest::MD5.hexdigest("#{self.secret}_#{timestamp}")
+      data = {'stamp' => timestamp, 'sig' => sig, 'token' => self.token, 'trans_id' => trans_id}
       req = Net::HTTP::Post.new(uri.path)
       req.set_form_data(data)
       http = Net::HTTP.new(uri.host, uri.port)
