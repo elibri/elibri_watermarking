@@ -2,6 +2,9 @@ require 'net/http'
 require 'net/https'
 require 'uri'
 require 'digest/md5'
+require 'base64'
+require 'cgi'
+require 'openssl'
 
 module ElibriWatermarking
   class Client
@@ -21,7 +24,7 @@ module ElibriWatermarking
       uri = URI(self.url + '/watermark')
       formats = formats.join(",") if formats.is_a?(Array)
       timestamp = Time.now.to_i
-      sig = Digest::MD5.hexdigest("#{self.secret}_#{timestamp}")    
+      sig = CGI.escape(Base64.encode64(OpenSSL::HMAC.digest('sha1', timestamp.to_s, self.secret)).strip) 
       data = {ident_type => ident, 'formats' => formats, 'visible_watermark' => visible_watermark,
         'title_postfix' => title_postfix, 'stamp' => timestamp, 'sig' => sig, 'token' => self.token}
       req = Net::HTTP::Post.new(uri.path)
@@ -36,7 +39,7 @@ module ElibriWatermarking
     def deliver(trans_id)
       uri = URI(self.url + '/deliver')
       timestamp = Time.now.to_i
-      sig = Digest::MD5.hexdigest("#{self.secret}_#{timestamp}")
+      sig = CGI.escape(Base64.encode64(OpenSSL::HMAC.digest('sha1', timestamp.to_s, self.secret)).strip) 
       data = {'stamp' => timestamp, 'sig' => sig, 'token' => self.token, 'trans_id' => trans_id}
       req = Net::HTTP::Post.new(uri.path)
       req.set_form_data(data)
@@ -50,7 +53,7 @@ module ElibriWatermarking
     def retry(trans_id)
       uri = URI(self.url + '/retry')
       timestamp = Time.now.to_i
-      sig = Digest::MD5.hexdigest("#{self.secret}_#{timestamp}")
+      sig = CGI.escape(Base64.encode64(OpenSSL::HMAC.digest('sha1', timestamp.to_s, self.secret)).strip) 
       data = {'stamp' => timestamp, 'sig' => sig, 'token' => self.token, 'trans_id' => trans_id}
       req = Net::HTTP::Post.new(uri.path)
       req.set_form_data(data)
