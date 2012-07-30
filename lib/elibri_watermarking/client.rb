@@ -74,13 +74,13 @@ module ElibriWatermarking
     def validate_response(res)
       case res.class.to_s
       when "Net::HTTPBadRequest"
-        raise ParametersError.new
+        raise ParametersError.new(res.body)
       when "Net::HTTPUnauthorized"
-        raise AuthenticationError.new        
+        raise AuthenticationError.new(res.body)
       when "Net::HTTPForbidden"
-        raise AuthorizationError.new
+        raise AuthorizationError.new(res.body)
       when "Net::HTTPInternalServerError"
-        raise ServerException.new
+        raise ServerException.new(res.body)
       when "Net::HTTPOK"
         return res.body
       end
