@@ -81,6 +81,8 @@ module ElibriWatermarking
         raise AuthorizationError.new(res.body)
       when "Net::HTTPInternalServerError"
         raise ServerException.new(res.body)
+      when "Net::HTTPRequestTimeOut"
+        raise RequestExpired.new(res.body)
       when "Net::HTTPOK"
         return res.body
       end

@@ -18,5 +18,8 @@ module ElibriWatermarking
   class WrongFormats < ElibriException
   end
   
+  class RequestExpired < ElibriException
+  end
+  
   
 end
