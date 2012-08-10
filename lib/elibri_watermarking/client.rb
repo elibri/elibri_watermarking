@@ -5,6 +5,7 @@ require 'digest/md5'
 require 'base64'
 require 'cgi'
 require 'openssl'
+require 'json'
 
 module ElibriWatermarking
   class Client
@@ -62,6 +63,20 @@ module ElibriWatermarking
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE
       res = http.start {|http| http.request(req) }
       return validate_response(res)
+    end
+    
+    def available_files
+      uri = URI(self.url + '/available_files.json')
+      timestamp = Time.now.to_i
+      sig = CGI.escape(Base64.encode64(OpenSSL::HMAC.digest('sha1', timestamp.to_s, self.secret)).strip) 
+      data = {'stamp' => timestamp, 'sig' => sig, 'token' => self.token}
+      req = Net::HTTP::Get.new(uri.path)
+      req.set_form_data(data)
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      res = http.start {|http| http.request(req) }
+      return JSON.parse(validate_response(res))
     end
     
     def watermark_and_deliver(ident, formats, visible_watermark, title_postfix)
