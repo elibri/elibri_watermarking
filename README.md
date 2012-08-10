@@ -37,6 +37,22 @@ Biblioteka daje nam do dyspozycji parę metod, odpowiadających wywołaniom meto
 * deliver (przyjmuje jeden parametr: identifykator transacji [otrzymany od watermark]) - wywołuje żądanie dostarczenia zwatermarkowanego pliku do bucketu klienta na s3
 * watermark_and_deliver (przyjmuje parametry identyczne jak watermark, zwraca identyfikator transacji, który klient zobowiązany jest zapisać i przechowywać) - wywołuje watermarkowanie pliku, a następnie żąda jego dostarczenia do bucketu klienta na s3
 * retry (przyjmuje jako parametr identyfikator transakcji, zwraca identyfikator nowej transakcji) - wywołuje żądanie ponowienia watermarkingu pliku, który został już ściągnięty (uwaga - sklep jest zobowiązany do przetrzymywanie zwatermarkowanego pliku przynajmniej przez 7 dni, dopiero po tym czasie możliwe jest wywołanie retry). Watermarking wykonywany jest z identycznymi parametrami, jak poprzedni. Klient zobowiązany jest zapisać i przechowywać nowy identyfikator transakcji. Po komendzie retry, niezbędne jest wywołanie komendy deliver w celu dostarczeni pliku do bucketu s3. Uwaga! Każdą transakcję retryować mozna tylko raz - w przypadku kolejnego żądania retry, konieczne jest podanie identyfikatora transakcji otrzymanego od poprzedniej komendy retry.
+* available_files - zwraca listę dostępnych do watermarkingu przez klienta plików. Pliki są zwracane w postaci tablicy hashów, postaci:
+```ruby
+[
+  {:product =>
+    {
+      :record_reference => 'a'
+      :publisher_name => 'b'
+      :publisher_id => 1
+      :isbn => '1234'
+      :title => 'Tytuł',
+      :formats => ["epub", "mobi"]
+      :premiere => "data premiery (jeśli w przyszłości - plik jest jeszcze niedostępny)"
+    }
+  }
+]
+```
 
 ## Błędy
 
