@@ -40,16 +40,14 @@ Biblioteka daje nam do dyspozycji parę metod, odpowiadających wywołaniom meto
 * available_files - zwraca listę dostępnych do watermarkingu przez klienta plików. Pliki są zwracane w postaci tablicy hashów, postaci:
 ```ruby
 [
-  {:product =>
-    {
-      :record_reference => 'a'
-      :publisher_name => 'b'
-      :publisher_id => 1
-      :isbn => '1234'
-      :title => 'Tytuł',
-      :formats => ["epub", "mobi"]
-      :premiere => "data premiery (jeśli w przyszłości - plik jest jeszcze niedostępny)"
-    }
+  {
+    :record_reference => 'a'
+    :publisher_name => 'b'
+    :publisher_id => 1
+    :isbn => '1234'
+    :title => 'Tytuł',
+    :formats => ["epub", "mobi"]
+    :available_date => "data od kiedy plik jest dostępny - jeśli pole nie występuje, znaczy to, że plik jest dostępny"
   }
 ]
 ```
