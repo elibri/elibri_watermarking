@@ -48,9 +48,12 @@ Biblioteka daje nam do dyspozycji parę metod, odpowiadających wywołaniom meto
     :title => 'Tytuł',
     :formats => ["epub", "mobi"]
     :available_date => "data od kiedy plik jest dostępny - jeśli pole nie występuje, znaczy to, że plik jest dostępny"
+    :suppliers => [1, 2, 3] #tablica zawierająca identyfikatora dostawców, mogących dostarczyć plik dla danego klienta
   }
 ]
 ```
+* check_suppliers (przyjmuje jeden parametr: identyfikator [ISBN bez myślników lub record_reference]) - zwraca listę dostawców danego pliku, w postaci tablicy zawierającej numeryczne identyfikatory dostawców
+* get_supplier (przyjmuje jeden parametr: numeryczny identyfikator dostawcy w systemie eLibri) - zwraca nazwę dostawcy o podanym identyfikatorze
 
 ## Błędy
 
