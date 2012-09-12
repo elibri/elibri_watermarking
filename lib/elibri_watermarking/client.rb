@@ -18,7 +18,9 @@ module ElibriWatermarking
       self.url = url
     end
     
-    def watermark(ident, formats, visible_watermark, title_postfix, supplier=nil)
+    def watermark(ident, formats, visible_watermark, title_postfix, *args)
+      supplier = args[0]
+      client_symbol = args[1]
       ident =~ /^[0-9]+$/ ? ident_type = 'isbn' : ident_type = 'record_reference'
       raise WrongFormats.new if formats.is_a?(String) && !formats =~ /^(epub|mobi|,)+$/
       raise WrongFormats.new if formats.is_a?(Array) && (formats != ['epub','mobi'] && formats != ['mobi','epub'] && formats != ['mobi'] && formats != ['epub'])
@@ -27,7 +29,8 @@ module ElibriWatermarking
       timestamp = Time.now.to_i
       sig = CGI.escape(Base64.encode64(OpenSSL::HMAC.digest('sha1', timestamp.to_s, self.secret)).strip) 
       data = {ident_type => ident, 'formats' => formats, 'visible_watermark' => visible_watermark,
-        'title_postfix' => title_postfix, 'stamp' => timestamp, 'sig' => sig, 'token' => self.token}
+        'title_postfix' => title_postfix, 'stamp' => timestamp, 'sig' => sig, 'token' => self.token,
+        'client_symbol' => client_symbol}
       if supplier
         data.merge!(:supplier => supplier)
       end
@@ -111,8 +114,10 @@ module ElibriWatermarking
       return validate_response(res)
     end
     
-    def watermark_and_deliver(ident, formats, visible_watermark, title_postfix)
-      trans_id = watermark(ident, formats, visible_watermark, title_postfix)
+    def watermark_and_deliver(ident, formats, visible_watermark, title_postfix, *args)
+      supplier = args[0]
+      client_symbol = args[1]
+      trans_id = watermark(ident, formats, visible_watermark, title_postfix, supplier, client_symbol)
       return trans_id if deliver(trans_id) == "OK"
     end
     
