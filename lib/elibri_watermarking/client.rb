@@ -21,6 +21,7 @@ module ElibriWatermarking
     def watermark(ident, formats, visible_watermark, title_postfix, *args)
       supplier = args[0]
       client_symbol = args[1]
+      customer_ip = args[2]
       ident =~ /^[0-9]+$/ ? ident_type = 'isbn' : ident_type = 'record_reference'
       raise WrongFormats.new if formats.is_a?(String) && !formats =~ /^(epub|mobi|,)+$/
       raise WrongFormats.new if formats.is_a?(Array) && (formats != ['epub','mobi'] && formats != ['mobi','epub'] && formats != ['mobi'] && formats != ['epub'])
@@ -33,6 +34,9 @@ module ElibriWatermarking
         'client_symbol' => client_symbol}
       if supplier
         data.merge!(:supplier => supplier)
+      end
+      if customer_ip
+        data.merge!(:customer_ip => customer_ip)
       end
       req = Net::HTTP::Post.new(uri.path)
       req.set_form_data(data)
