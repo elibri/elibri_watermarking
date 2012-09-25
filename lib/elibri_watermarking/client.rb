@@ -89,6 +89,20 @@ module ElibriWatermarking
       return JSON.parse(validate_response(res))
     end
     
+    def soon_available_files
+      uri = URI(self.url + '/soon_available_files.json')
+      timestamp = Time.now.to_i
+      sig = CGI.escape(Base64.encode64(OpenSSL::HMAC.digest('sha1', timestamp.to_s, self.secret)).strip) 
+      data = {'stamp' => timestamp, 'sig' => sig, 'token' => self.token}
+      req = Net::HTTP::Get.new(uri.path)
+      req.set_form_data(data)
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      res = http.start {|http| http.request(req) }
+      return JSON.parse(validate_response(res))
+    end
+    
     def check_suppliers(ident)
       ident =~ /^[0-9]+$/ ? ident_type = 'isbn' : ident_type = 'record_reference'
       uri = URI(self.url + '/check_suppliers')
