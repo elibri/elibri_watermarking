@@ -22,6 +22,8 @@ module ElibriWatermarking
       supplier = args[0]
       client_symbol = args[1]
       customer_ip = args[2]
+      ssl = args[3]
+      ssl = true if ssl.nil?
       ident =~ /^[0-9]+$/ ? ident_type = 'isbn' : ident_type = 'record_reference'
       raise WrongFormats.new if formats.is_a?(String) && !formats =~ /^(epub|mobi|pdf|,)+$/
       raise WrongFormats.new if formats.is_a?(Array) && ((formats - ['epub','mobi','pdf']) != [] || (formats & ['epub','mobi','pdf']).count < 1)
@@ -41,13 +43,15 @@ module ElibriWatermarking
       req = Net::HTTP::Post.new(uri.path)
       req.set_form_data(data)
       http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = true
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      if ssl
+        http.use_ssl = true
+        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      end
       res = http.start {|http| http.request(req) }
       return validate_response(res)
     end
     
-    def deliver(trans_id)
+    def deliver(trans_id, ssl=true)
       uri = URI(self.url + '/deliver')
       timestamp = Time.now.to_i
       sig = CGI.escape(Base64.encode64(OpenSSL::HMAC.digest('sha1', timestamp.to_s, self.secret)).strip) 
@@ -55,13 +59,15 @@ module ElibriWatermarking
       req = Net::HTTP::Post.new(uri.path)
       req.set_form_data(data)
       http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = true
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      if ssl
+        http.use_ssl = true
+        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      end
       res = http.start {|http| http.request(req) }
       return validate_response(res)
     end
     
-    def retry(trans_id)
+    def retry(trans_id, ssl=true)
       uri = URI(self.url + '/retry')
       timestamp = Time.now.to_i
       sig = CGI.escape(Base64.encode64(OpenSSL::HMAC.digest('sha1', timestamp.to_s, self.secret)).strip) 
@@ -69,13 +75,15 @@ module ElibriWatermarking
       req = Net::HTTP::Post.new(uri.path)
       req.set_form_data(data)
       http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = true
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      if ssl
+        http.use_ssl = true
+        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      end
       res = http.start {|http| http.request(req) }
       return validate_response(res)
     end
     
-    def available_files
+    def available_files(ssl=true)
       uri = URI(self.url + '/available_files.json')
       timestamp = Time.now.to_i
       sig = CGI.escape(Base64.encode64(OpenSSL::HMAC.digest('sha1', timestamp.to_s, self.secret)).strip) 
@@ -83,13 +91,15 @@ module ElibriWatermarking
       req = Net::HTTP::Get.new(uri.path)
       req.set_form_data(data)
       http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = true
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      if ssl
+        http.use_ssl = true
+        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      end
       res = http.start {|http| http.request(req) }
       return JSON.parse(validate_response(res))
     end
     
-    def soon_available_files
+    def soon_available_files(ssl=true)
       uri = URI(self.url + '/soon_available_files.json')
       timestamp = Time.now.to_i
       sig = CGI.escape(Base64.encode64(OpenSSL::HMAC.digest('sha1', timestamp.to_s, self.secret)).strip) 
@@ -97,13 +107,15 @@ module ElibriWatermarking
       req = Net::HTTP::Get.new(uri.path)
       req.set_form_data(data)
       http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = true
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      if ssl
+        http.use_ssl = true
+        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      end
       res = http.start {|http| http.request(req) }
       return JSON.parse(validate_response(res))
     end
     
-    def check_suppliers(ident)
+    def check_suppliers(ident, ssl=true)
       ident =~ /^[0-9]+$/ ? ident_type = 'isbn' : ident_type = 'record_reference'
       uri = URI(self.url + '/check_suppliers')
       timestamp = Time.now.to_i
@@ -112,13 +124,15 @@ module ElibriWatermarking
       req = Net::HTTP::Get.new(uri.path)
       req.set_form_data(data)
       http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = true
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      if ssl
+        http.use_ssl = true
+        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      end
       res = http.start {|http| http.request(req) }
       return validate_response(res).split(",").map { |x| x.to_i }
     end
     
-    def get_supplier(id)
+    def get_supplier(id, ssl=true)
       uri = URI(self.url + '/get_supplier')
       timestamp = Time.now.to_i
       sig = CGI.escape(Base64.encode64(OpenSSL::HMAC.digest('sha1', timestamp.to_s, self.secret)).strip) 
@@ -126,8 +140,10 @@ module ElibriWatermarking
       req = Net::HTTP::Get.new(uri.path)
       req.set_form_data(data)
       http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = true
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      if ssl
+        http.use_ssl = true
+        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      end
       res = http.start {|http| http.request(req) }
       return validate_response(res)
     end
@@ -135,7 +151,8 @@ module ElibriWatermarking
     def watermark_and_deliver(ident, formats, visible_watermark, title_postfix, *args)
       supplier = args[0]
       client_symbol = args[1]
-      trans_id = watermark(ident, formats, visible_watermark, title_postfix, supplier, client_symbol)
+      ssl = args[2]
+      trans_id = watermark(ident, formats, visible_watermark, title_postfix, supplier, client_symbol, ssl)
       return trans_id if deliver(trans_id) == "OK"
     end
     
