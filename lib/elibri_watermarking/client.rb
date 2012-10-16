@@ -18,11 +18,11 @@ module ElibriWatermarking
       self.url = url
     end
     
-    def watermark(ident, formats, visible_watermark, title_postfix, *args)
-      supplier = args[0]
-      client_symbol = args[1]
-      customer_ip = args[2]
-      ssl = args[3]
+    def watermark(ident, formats, visible_watermark, title_postfix, args={})
+      supplier = args[:supplier]
+      client_symbol = args[:client_symbol]
+      customer_ip = args[:customer_ip]
+      ssl = args[:ssl]
       ssl = true if ssl.nil?
       ident =~ /^[0-9]+$/ ? ident_type = 'isbn' : ident_type = 'record_reference'
       raise WrongFormats.new if formats.is_a?(String) && !formats =~ /^(epub|mobi|pdf|,)+$/
@@ -148,11 +148,8 @@ module ElibriWatermarking
       return validate_response(res)
     end
     
-    def watermark_and_deliver(ident, formats, visible_watermark, title_postfix, *args)
-      supplier = args[0]
-      client_symbol = args[1]
-      ssl = args[2]
-      trans_id = watermark(ident, formats, visible_watermark, title_postfix, supplier, client_symbol, ssl)
+    def watermark_and_deliver(ident, formats, visible_watermark, title_postfix, args={})
+      trans_id = watermark(ident, formats, visible_watermark, title_postfix, args)
       return trans_id if deliver(trans_id) == "OK"
     end
     
