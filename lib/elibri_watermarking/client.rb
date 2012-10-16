@@ -23,8 +23,8 @@ module ElibriWatermarking
       client_symbol = args[1]
       customer_ip = args[2]
       ident =~ /^[0-9]+$/ ? ident_type = 'isbn' : ident_type = 'record_reference'
-      raise WrongFormats.new if formats.is_a?(String) && !formats =~ /^(epub|mobi|,)+$/
-      raise WrongFormats.new if formats.is_a?(Array) && (formats != ['epub','mobi'] && formats != ['mobi','epub'] && formats != ['mobi'] && formats != ['epub'])
+      raise WrongFormats.new if formats.is_a?(String) && !formats =~ /^(epub|mobi|pdf|,)+$/
+      raise WrongFormats.new if formats.is_a?(Array) && ((formats - ['epub','mobi','pdf']) != [] || (formats & ['epub','mobi','pdf']).count < 1)
       uri = URI(self.url + '/watermark')
       formats = formats.join(",") if formats.is_a?(Array)
       timestamp = Time.now.to_i
