@@ -5,8 +5,8 @@ require "elibri_watermarking/version"
 Gem::Specification.new do |s|
   s.name        = "elibri_watermarking"
   s.version     = ElibriWatermarking::VERSION
-  s.authors     = ["Piotr Szmielew"]
-  s.email       = ["p.szmielew@ava.waw.pl"]
+  s.authors     = ["Piotr Szmielew", "Tomasz Meka"]
+  s.email       = ["p.szmielew@ava.waw.pl", "tomek@elibri.com.pl"]
   s.homepage    = "http://elibri.com.pl"
   s.summary     = %q{Gem designed to help in use of Elibri watermarking API.}
   s.description = %q{Gem designed to help in use of Elibri watermarking API.}
@@ -20,5 +20,5 @@ Gem::Specification.new do |s|
 
   # specify any dependencies here; for example:
   s.add_development_dependency "rake"
-  # s.add_runtime_dependency "rest-client"
+  s.add_runtime_dependency "net-dns"
 end

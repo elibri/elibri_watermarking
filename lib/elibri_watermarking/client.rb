@@ -1,5 +1,6 @@
 require 'net/http'
 require 'net/https'
+require 'net/dns'
 require 'uri'
 require 'digest/md5'
 require 'base64'
@@ -10,151 +11,96 @@ require 'json'
 module ElibriWatermarking
   class Client
     
-    attr_accessor :token, :secret, :url
+    attr_accessor :token, :secret, :logger
     
-    def initialize(token, secret, url='https://elibri.com.pl/watermarking')
+    def initialize(token, secret)
       self.token = token
       self.secret = secret
-      self.url = url
     end
     
-    def watermark(ident, formats, visible_watermark, title_postfix, args={})
-      supplier = args[:supplier]
-      client_symbol = args[:client_symbol]
-      customer_ip = args[:customer_ip]
-      ssl = args[:ssl]
-      ssl = true if ssl.nil?
+    def watermark(ident, formats, visible_watermark, title_postfix, customer_ip, client_symbol = nil, supplier = nil)
       ident =~ /^[0-9]+$/ ? ident_type = 'isbn' : ident_type = 'record_reference'
       raise WrongFormats.new if formats.is_a?(String) && !formats =~ /^(epub|mobi|pdf|,)+$/
       raise WrongFormats.new if formats.is_a?(Array) && ((formats - ['epub','mobi','pdf']) != [] || (formats & ['epub','mobi','pdf']).count < 1)
-      uri = URI(self.url + '/watermark')
       formats = formats.join(",") if formats.is_a?(Array)
-      timestamp = Time.now.to_i
-      sig = CGI.escape(Base64.encode64(OpenSSL::HMAC.digest('sha1', timestamp.to_s, self.secret)).strip) 
       data = {ident_type => ident, 'formats' => formats, 'visible_watermark' => visible_watermark,
-        'title_postfix' => title_postfix, 'stamp' => timestamp, 'sig' => sig, 'token' => self.token,
-        'client_symbol' => client_symbol}
-      if supplier
-        data.merge!(:supplier => supplier)
-      end
-      if customer_ip
-        data.merge!(:customer_ip => customer_ip)
-      end
-      req = Net::HTTP::Post.new(uri.path)
-      req.set_form_data(data)
-      http = Net::HTTP.new(uri.host, uri.port)
-      if ssl
-        http.use_ssl = true
-        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-      end
-      res = http.start {|http| http.request(req) }
-      return validate_response(res)
+              'title_postfix' => title_postfix, 'client_symbol' => client_symbol}
+      data.merge!(:supplier => supplier) if supplier
+      data.merge!(:customer_ip => customer_ip) if customer_ip
+
+      try_with_different_servers('watermark') do |uri|
+        return get_response_from_server(uri, data, Net::HTTP::Post)
+      end  
     end
-    
-    def deliver(trans_id, ssl=true)
-      uri = URI(self.url + '/deliver')
-      timestamp = Time.now.to_i
-      sig = CGI.escape(Base64.encode64(OpenSSL::HMAC.digest('sha1', timestamp.to_s, self.secret)).strip) 
-      data = {'stamp' => timestamp, 'sig' => sig, 'token' => self.token, 'trans_id' => trans_id}
-      req = Net::HTTP::Post.new(uri.path)
-      req.set_form_data(data)
-      http = Net::HTTP.new(uri.host, uri.port)
-      if ssl
-        http.use_ssl = true
-        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+
+    def deliver(trans_id)
+      try_with_different_servers('deliver') do |uri|
+        return get_response_from_server(uri, {'trans_id' =>  trans_id}, Net::HTTP::Post)
       end
-      res = http.start {|http| http.request(req) }
-      return validate_response(res)
     end
-    
-    def retry(trans_id, ssl=true)
-      uri = URI(self.url + '/retry')
-      timestamp = Time.now.to_i
-      sig = CGI.escape(Base64.encode64(OpenSSL::HMAC.digest('sha1', timestamp.to_s, self.secret)).strip) 
-      data = {'stamp' => timestamp, 'sig' => sig, 'token' => self.token, 'trans_id' => trans_id}
-      req = Net::HTTP::Post.new(uri.path)
-      req.set_form_data(data)
-      http = Net::HTTP.new(uri.host, uri.port)
-      if ssl
-        http.use_ssl = true
-        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+
+    def retry(trans_id)
+      try_with_different_servers('retry') do |uri|
+        return get_response_from_server(uri, {'trans_id' =>  trans_id}, Net::HTTP::Post)
       end
-      res = http.start {|http| http.request(req) }
-      return validate_response(res)
     end
-    
-    def available_files(ssl=true)
-      uri = URI(self.url + '/available_files.json')
-      timestamp = Time.now.to_i
-      sig = CGI.escape(Base64.encode64(OpenSSL::HMAC.digest('sha1', timestamp.to_s, self.secret)).strip) 
-      data = {'stamp' => timestamp, 'sig' => sig, 'token' => self.token}
-      req = Net::HTTP::Get.new(uri.path)
-      req.set_form_data(data)
-      http = Net::HTTP.new(uri.host, uri.port)
-      if ssl
-        http.use_ssl = true
-        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+
+    def available_files
+      try_with_different_servers('available_files.json') do |uri|
+        return JSON.parse(get_response_from_server(uri, {}, Net::HTTP::Get))
       end
-      res = http.start {|http| http.request(req) }
-      return JSON.parse(validate_response(res))
     end
-    
-    def soon_available_files(ssl=true)
-      uri = URI(self.url + '/soon_available_files.json')
-      timestamp = Time.now.to_i
-      sig = CGI.escape(Base64.encode64(OpenSSL::HMAC.digest('sha1', timestamp.to_s, self.secret)).strip) 
-      data = {'stamp' => timestamp, 'sig' => sig, 'token' => self.token}
-      req = Net::HTTP::Get.new(uri.path)
-      req.set_form_data(data)
-      http = Net::HTTP.new(uri.host, uri.port)
-      if ssl
-        http.use_ssl = true
-        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+
+    def soon_available_files
+      try_with_different_servers('soon_available_files.json') do |uri|
+        return JSON.parse(get_response_from_server(uri, {}, Net::HTTP::Get))
       end
-      res = http.start {|http| http.request(req) }
-      return JSON.parse(validate_response(res))
     end
-    
-    def check_suppliers(ident, ssl=true)
+
+    def check_suppliers(ident)
       ident =~ /^[0-9]+$/ ? ident_type = 'isbn' : ident_type = 'record_reference'
-      uri = URI(self.url + '/check_suppliers')
-      timestamp = Time.now.to_i
-      sig = CGI.escape(Base64.encode64(OpenSSL::HMAC.digest('sha1', timestamp.to_s, self.secret)).strip) 
-      data = {'stamp' => timestamp, 'sig' => sig, 'token' => self.token, ident_type => ident}
-      req = Net::HTTP::Get.new(uri.path)
-      req.set_form_data(data)
-      http = Net::HTTP.new(uri.host, uri.port)
-      if ssl
-        http.use_ssl = true
-        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      try_with_different_servers('check_suppliers') do |uri|
+        return get_response_from_server(uri, { ident_type => ident}, Net::HTTP::Get).split(",").map { |x| x.to_i }
       end
-      res = http.start {|http| http.request(req) }
-      return validate_response(res).split(",").map { |x| x.to_i }
     end
-    
-    def get_supplier(id, ssl=true)
-      uri = URI(self.url + '/get_supplier')
-      timestamp = Time.now.to_i
-      sig = CGI.escape(Base64.encode64(OpenSSL::HMAC.digest('sha1', timestamp.to_s, self.secret)).strip) 
-      data = {'stamp' => timestamp, 'sig' => sig, 'token' => self.token, 'id' => id}
-      req = Net::HTTP::Get.new(uri.path)
+
+    def get_supplier(id)
+      try_with_different_servers('get_supplier') do |uri|
+        return get_response_from_server(uri, { 'id' => id }, Net::HTTP::Get)
+      end
+    end
+
+    protected
+
+    def get_response_from_server(uri, data, request_class)
+      logger.info("doing #{uri}") if logger
+      timestamp = Time.now.to_i.to_s
+      data.merge!({'stamp' => timestamp, 'sig' => CGI.escape(Base64.encode64(OpenSSL::HMAC.digest('sha1', timestamp, self.secret)).strip), 'token' => self.token})
+      req = request_class.new(uri.path)
       req.set_form_data(data)
       http = Net::HTTP.new(uri.host, uri.port)
-      if ssl
-        http.use_ssl = true
-        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-      end
+      http.use_ssl = true
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
       res = http.start {|http| http.request(req) }
       return validate_response(res)
     end
-    
-    def watermark_and_deliver(ident, formats, visible_watermark, title_postfix, args={})
-      trans_id = watermark(ident, formats, visible_watermark, title_postfix, args)
-      return trans_id if deliver(trans_id) == "OK"
+
+    def try_with_different_servers(action)
+      txt_record = Net::DNS::Resolver.start("transactional-servers.elibri.com.pl", Net::DNS::TXT).answer.first.txt
+      servers = txt_record.split(",").sort_by(&:rand).map(&:strip)
+      servers.each do |server|
+        uri = URI("https://#{server}.elibri.com.pl/watermarking/#{action}")
+        logger.info("trying #{uri}") if logger
+        begin
+          yield uri
+        rescue Timeout::Error, SystemCallError
+          logger.error($!) if logger
+        rescue ServerException
+          logger.error($!) if logger
+        end
+      end
     end
-    
-    protected
-    
+
     def validate_response(res)
       case res.class.to_s
       when "Net::HTTPBadRequest"
