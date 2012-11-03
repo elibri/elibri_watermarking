@@ -20,6 +20,8 @@ module ElibriWatermarking
   
   class RequestExpired < ElibriException
   end
-  
+ 
+  class NoWorkingServer < ElibriException
+  end 
   
 end

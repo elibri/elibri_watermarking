@@ -99,6 +99,7 @@ module ElibriWatermarking
           logger.error($!) if logger
         end
       end
+      raise NoWorkingServer.new("none of the servers #{servers.map { |s| "#{s}.elibri.com.pl" }.join(', ')} seems to work now")
     end
 
     def validate_response(res)
