@@ -11,11 +11,12 @@ require 'json'
 module ElibriWatermarking
   class Client
     
-    attr_accessor :token, :secret, :logger
+    attr_accessor :token, :secret, :logger, :servers
     
-    def initialize(token, secret)
+    def initialize(token, secret, servers = nil)
       self.token = token
       self.secret = secret
+      self.servers = servers
     end
     
     def watermark(ident, formats, visible_watermark, title_postfix, customer_ip, client_symbol = nil, supplier = nil)
@@ -86,7 +87,7 @@ module ElibriWatermarking
     end
 
     def try_with_different_servers(action)
-      txt_record = Net::DNS::Resolver.start("transactional-servers.elibri.com.pl", Net::DNS::TXT).answer.first.txt
+      txt_record = self.servers || Net::DNS::Resolver.start("transactional-servers.elibri.com.pl", Net::DNS::TXT).answer.first.txt
       servers = txt_record.split(",").sort_by(&:rand).map(&:strip)
       servers.each do |server|
         uri = URI("https://#{server}.elibri.com.pl/watermarking/#{action}")
