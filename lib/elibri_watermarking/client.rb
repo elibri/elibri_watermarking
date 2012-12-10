@@ -88,7 +88,7 @@ module ElibriWatermarking
 
     def try_with_different_servers(action)
       txt_record = self.servers || Net::DNS::Resolver.start("transactional-servers.elibri.com.pl", Net::DNS::TXT).answer.first.txt
-      servers = txt_record.split(",").sort_by(&:rand).map(&:strip)
+      servers = txt_record.split(",").sort_by { rand }.map(&:strip)
       servers.each do |server|
         uri = URI("https://#{server}.elibri.com.pl/watermarking/#{action}")
         logger.info("trying #{uri}") if logger
