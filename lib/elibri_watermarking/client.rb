@@ -21,8 +21,8 @@ module ElibriWatermarking
     
     def watermark(ident, formats, visible_watermark, title_postfix, customer_ip, client_symbol = nil, supplier = nil)
       ident =~ /^[0-9]+$/ ? ident_type = 'isbn' : ident_type = 'record_reference'
-      raise WrongFormats.new if formats.is_a?(String) && !formats =~ /^(epub|mobi|pdf|,)+$/
-      raise WrongFormats.new if formats.is_a?(Array) && ((formats - ['epub','mobi','pdf']) != [] || (formats & ['epub','mobi','pdf']).count < 1)
+      raise WrongFormats.new if formats.is_a?(String) && !formats =~ /^(epub|mobi|pdf|mp3_in_zip|,)+$/
+      raise WrongFormats.new if formats.is_a?(Array) && ((formats - ['epub','mobi','pdf','mp3_in_zip']) != [] || (formats & ['epub','mobi','pdf','mp3_in_zip']).count < 1)
       formats = formats.join(",") if formats.is_a?(Array)
       data = {ident_type => ident, 'formats' => formats, 'visible_watermark' => visible_watermark,
               'title_postfix' => title_postfix, 'client_symbol' => client_symbol}
