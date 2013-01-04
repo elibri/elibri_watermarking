@@ -19,13 +19,15 @@ module ElibriWatermarking
       self.servers = servers
     end
     
-    def watermark(ident, formats, visible_watermark, title_postfix, customer_ip, client_symbol = nil, supplier = nil)
+    def watermark(ident, formats, visible_watermark, title_postfix, customer_ip, client_symbol = nil, supplier = nil, delivery_form = nil)
       ident =~ /^[0-9]+$/ ? ident_type = 'isbn' : ident_type = 'record_reference'
       raise WrongFormats.new if formats.is_a?(String) && !formats =~ /^(epub|mobi|pdf|mp3_in_zip|,)+$/
       raise WrongFormats.new if formats.is_a?(Array) && ((formats - ['epub','mobi','pdf','mp3_in_zip']) != [] || (formats & ['epub','mobi','pdf','mp3_in_zip']).count < 1)
       formats = formats.join(",") if formats.is_a?(Array)
+      raise ParametersError.new if delivery_form && formats != 'mp3_in_zip'
+      raise ParametersError.new if delivery_form && (delivery_form != 'mp3' && delivery_form != 'zip')
       data = {ident_type => ident, 'formats' => formats, 'visible_watermark' => visible_watermark,
-              'title_postfix' => title_postfix, 'client_symbol' => client_symbol}
+              'title_postfix' => title_postfix, 'client_symbol' => client_symbol, 'delivery_form' => delivery_form}
       data.merge!(:supplier => supplier) if supplier
       data.merge!(:customer_ip => customer_ip) if customer_ip
 
@@ -40,9 +42,9 @@ module ElibriWatermarking
       end
     end
 
-    def retry(trans_id)
+    def retry(trans_id, delivery_form = nil)
       try_with_different_servers('retry') do |uri|
-        return get_response_from_server(uri, {'trans_id' =>  trans_id}, Net::HTTP::Post)
+        return get_response_from_server(uri, {'trans_id' =>  trans_id, 'delivery_form' => delivery_form}, Net::HTTP::Post)
       end
     end
 
