@@ -59,6 +59,12 @@ module ElibriWatermarking
         return JSON.parse(get_response_from_server(uri, {}, Net::HTTP::Get))
       end
     end
+    
+    def soon_unavailable_files
+      try_with_different_servers('soon_unavailable_files.json') do |uri|
+        return JSON.parse(get_response_from_server(uri, {}, Net::HTTP::Get))
+      end
+    end
 
     def check_suppliers(ident)
       ident =~ /^[0-9]+$/ ? ident_type = 'isbn' : ident_type = 'record_reference'
