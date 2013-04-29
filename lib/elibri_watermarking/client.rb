@@ -82,6 +82,12 @@ module ElibriWatermarking
         return get_response_from_server(uri, { 'id' => id }, Net::HTTP::Get)
       end
     end
+    
+    def check_api
+      try_with_different_servers('ver') do |uri|
+        return get_response_from_server(uri, {}, Net::HTTP::Get)
+      end
+    end
 
     protected
 
