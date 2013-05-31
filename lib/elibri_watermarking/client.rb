@@ -88,6 +88,10 @@ module ElibriWatermarking
         return get_response_from_server(uri, {}, Net::HTTP::Get)
       end
     end
+    
+    def new_complaint(trans_id, reason)
+      get_response_from_server(URI('https://www.elibri.com.pl/api_complaints'), {:trans_id => trans_id, :reason => reason}, Net::HTTP::Post)
+    end
 
     protected
 
@@ -98,7 +102,7 @@ module ElibriWatermarking
       req = request_class.new(uri.path)
       req.set_form_data(data)
       http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = true
+  #    http.use_ssl = true
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE
       res = http.start {|http| http.request(req) }
       return validate_response(res)

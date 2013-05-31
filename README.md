@@ -57,6 +57,7 @@ Biblioteka daje nam do dyspozycji parę metod, odpowiadających wywołaniom meto
 * soon_unavailable_files - zwraca listę plików dostępnych do watermarkingu, które wkrótce wygasną (przestaną być dostępne). Format analogiczny jak w metodzie available_files.
 * check_suppliers (przyjmuje jeden parametr: identyfikator [ISBN bez myślników lub record_reference]) - zwraca listę dostawców danego pliku, w postaci tablicy zawierającej numeryczne identyfikatory dostawców
 * get_supplier (przyjmuje jeden parametr: numeryczny identyfikator dostawcy w systemie eLibri) - zwraca nazwę dostawcy o podanym identyfikatorze
+* new_complaint (przyjmuje dwa parametry: identyfikator tranksacji do zareklamowania i powód reklamacji) - zgłasza nową reklamację do transakcji w systemie eLibri
 
 ## Błędy
 
