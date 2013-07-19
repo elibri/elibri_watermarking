@@ -101,7 +101,7 @@ module ElibriWatermarking
       req = request_class.new(uri.path)
       req.set_form_data(data)
       http = Net::HTTP.new(uri.host, uri.port)
-  #    http.use_ssl = true
+      http.use_ssl = true
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE
       res = http.start {|http| http.request(req) }
       return validate_response(res)
@@ -111,7 +111,7 @@ module ElibriWatermarking
       txt_record = self.servers || Net::DNS::Resolver.start("transactional-servers.elibri.com.pl", Net::DNS::TXT).answer.first.txt
       servers = txt_record.split(",").sort_by { rand }.map(&:strip)
       servers.each do |server|
-        uri = URI("http://#{server}.elibri.com.pl/watermarking/#{action}")
+        uri = URI("https://#{server}.elibri.com.pl/watermarking/#{action}")
         logger.info("trying #{uri}") if logger
         begin
           yield uri
