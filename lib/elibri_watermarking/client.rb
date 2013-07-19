@@ -78,9 +78,8 @@ module ElibriWatermarking
     end
 
     def get_supplier(id)
-      try_with_different_servers('get_supplier') do |uri|
-        return get_response_from_server(uri, { 'id' => id }, Net::HTTP::Get)
-      end
+      get_response_from_server(URI('https://www.elibri.com.pl/watermarking/get_supplier'), {:id => id}, Net::HTTP::Get)
+      #to chyba moze byc tylko z glownego serwera?
     end
     
     def check_api
@@ -112,7 +111,7 @@ module ElibriWatermarking
       txt_record = self.servers || Net::DNS::Resolver.start("transactional-servers.elibri.com.pl", Net::DNS::TXT).answer.first.txt
       servers = txt_record.split(",").sort_by { rand }.map(&:strip)
       servers.each do |server|
-        uri = URI("https://#{server}.elibri.com.pl/watermarking/#{action}")
+        uri = URI("http://#{server}.elibri.com.pl/watermarking/#{action}")
         logger.info("trying #{uri}") if logger
         begin
           yield uri
