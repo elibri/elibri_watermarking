@@ -19,7 +19,8 @@ module ElibriWatermarking
       self.servers = servers
     end
     
-    def watermark(ident, formats, visible_watermark, title_postfix, customer_ip, client_symbol = nil, supplier = nil, delivery_form = nil, price = nil, promotion_id = nil)
+    def watermark(ident, formats, visible_watermark, title_postfix, customer_ip, client_symbol = nil, supplier = nil, 
+                  delivery_form = nil, price = nil, promotion_id = nil, low_priority = false)
       if ident =~ /^[0-9]+$/ && ident.size == 13
         ident_type = 'isbn'
       else
@@ -36,6 +37,7 @@ module ElibriWatermarking
       data.merge!(:customer_ip => customer_ip) if customer_ip
       data.merge!(:price => price) if price
       data.merge!(:promotion_id => promotion_id) if promotion_id
+      data.merge!(:low_priority => low_priority) if low_priority
       try_with_different_servers('watermark') do |uri|
         return get_response_from_server(uri, data, Net::HTTP::Post)
       end  
