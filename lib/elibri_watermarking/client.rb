@@ -43,15 +43,19 @@ module ElibriWatermarking
       end  
     end
 
-    def deliver(trans_id)
+    def deliver(trans_id, low_priority = false)
       try_with_different_servers('deliver') do |uri|
-        return get_response_from_server(uri, {'trans_id' =>  trans_id}, Net::HTTP::Post)
+        data = {'trans_id' =>  trans_id}
+        data.merge!(:low_priority => low_priority) if low_priority
+        return get_response_from_server(uri, data, Net::HTTP::Post)
       end
     end
 
-    def retry(trans_id, delivery_form = nil)
+    def retry(trans_id, delivery_form = nil, low_priority = false)
       try_with_different_servers('retry') do |uri|
-        return get_response_from_server(uri, {'trans_id' =>  trans_id, 'delivery_form' => delivery_form}, Net::HTTP::Post)
+        data = {'trans_id' =>  trans_id, 'delivery_form' => delivery_form}
+        data.merge!(:low_priority => low_priority) if low_priority
+        return get_response_from_server(uri, data, Net::HTTP::Post)
       end
     end
 
