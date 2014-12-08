@@ -1,6 +1,6 @@
 module ElibriWatermarking
   
-  class ElibriException < Exception
+  class ElibriException < StandardError
   end
   
   class ParametersError < ElibriException
