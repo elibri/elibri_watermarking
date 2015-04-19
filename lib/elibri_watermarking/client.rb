@@ -145,8 +145,9 @@ module ElibriWatermarking
         raise RequestExpired.new(res.body)
       when "Net::HTTPOK"
         return res.body
+      else
+        raise ServerException.new(res.body)
       end
-      return res.body
     end
   end
 end
