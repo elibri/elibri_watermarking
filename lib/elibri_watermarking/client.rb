@@ -10,16 +10,16 @@ require 'json'
 
 module ElibriWatermarking
   class Client
-    
+
     attr_accessor :token, :secret, :logger, :servers
-    
+
     def initialize(token, secret, servers = nil)
       self.token = token
       self.secret = secret
       self.servers = servers
     end
-    
-    def watermark(ident, formats, visible_watermark, title_postfix, customer_ip, client_symbol = nil, supplier = nil, 
+
+    def watermark(ident, formats, visible_watermark, title_postfix, customer_ip, client_symbol = nil, supplier = nil,
                   delivery_form = nil, price = nil, promotion_id = nil, low_priority = false)
       if ident =~ /^[0-9]+$/ && ident.size == 13
         ident_type = 'isbn'
@@ -40,7 +40,7 @@ module ElibriWatermarking
       data.merge!(:low_priority => low_priority) if low_priority
       try_with_different_servers('watermark') do |uri|
         return get_response_from_server(uri, data, Net::HTTP::Post)
-      end  
+      end
     end
 
     def deliver(trans_id, low_priority = false)
@@ -70,7 +70,7 @@ module ElibriWatermarking
         return JSON.parse(get_response_from_server(uri, {}, Net::HTTP::Get))
       end
     end
-    
+
     def soon_unavailable_files
       try_with_different_servers('soon_unavailable_files.json') do |uri|
         return JSON.parse(get_response_from_server(uri, {}, Net::HTTP::Get))
@@ -88,13 +88,13 @@ module ElibriWatermarking
       get_response_from_server(URI('https://www.elibri.com.pl/watermarking/get_supplier'), {:id => id}, Net::HTTP::Get)
       #to chyba moze byc tylko z glownego serwera?
     end
-    
+
     def check_api
       try_with_different_servers('ver') do |uri|
         return get_response_from_server(uri, {}, Net::HTTP::Get)
       end
     end
-    
+
     def new_complaint(trans_id, reason)
       get_response_from_server(URI('https://www.elibri.com.pl/api_complaints'), {:trans_id => trans_id, :reason => reason}, Net::HTTP::Post)
     end
@@ -118,7 +118,11 @@ module ElibriWatermarking
       txt_record = self.servers || Net::DNS::Resolver.start("transactional-servers.elibri.com.pl", Net::DNS::TXT).answer.first.txt
       servers = txt_record.split(",").sort_by { rand }.map(&:strip)
       servers.each do |server|
-        uri = URI("https://#{server}.elibri.com.pl/watermarking/#{action}")
+        if server.starts_with?("https:")
+          uri = URI("#{server}/watermarking/#{action}")
+        else
+          uri = URI("https://#{server}.elibri.com.pl/watermarking/#{action}")
+        end
         logger.info("trying #{uri}") if logger
         begin
           yield uri
