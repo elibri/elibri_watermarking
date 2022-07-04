@@ -85,7 +85,7 @@ module ElibriWatermarking
     end
 
     def get_supplier(id)
-      get_response_from_server(URI('https://www.elibri.com.pl/watermarking/get_supplier'), {:id => id}, Net::HTTP::Get)
+      get_response_from_server(construct_main_server_url('/watermarking/get_supplier'), {:id => id}, Net::HTTP::Get)
       #to chyba moze byc tylko z glownego serwera?
     end
 
@@ -96,10 +96,18 @@ module ElibriWatermarking
     end
 
     def new_complaint(trans_id, reason)
-      get_response_from_server(URI('https://www.elibri.com.pl/api_complaints'), {:trans_id => trans_id, :reason => reason}, Net::HTTP::Post)
+      get_response_from_server(construct_main_server_url('/api_complaints'), {:trans_id => trans_id, :reason => reason}, Net::HTTP::Post)
     end
 
     protected
+
+    def construct_main_server_url(path)
+      if server.starts_with?("https:")
+        URI("#{server}#{path}")
+      else
+        URI("https://www.elibri.com.pl#{path}")
+      end
+    end
 
     def get_response_from_server(uri, data, request_class)
       logger.info("doing #{uri}") if logger
