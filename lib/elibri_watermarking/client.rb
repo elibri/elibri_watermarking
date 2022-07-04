@@ -102,8 +102,8 @@ module ElibriWatermarking
     protected
 
     def construct_main_server_url(path)
-      if server.starts_with?("https:")
-        URI("#{server}#{path}")
+      if servers && servers.starts_with?("https:")
+        URI("#{servers}#{path}")
       else
         URI("https://www.elibri.com.pl#{path}")
       end
