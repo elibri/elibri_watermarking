@@ -26,7 +26,7 @@ module ElibriWatermarking
       else
         ident_type = 'record_reference'
       end
-      raise WrongFormats.new if formats.is_a?(String) && !formats =~ /^(epub|mobi|pdf|mp3_in_zip|,)+$/
+      raise WrongFormats.new if formats.is_a?(String) && !(formats =~ /^(epub|mobi|pdf|mp3_in_zip|,)+$/)
       raise WrongFormats.new if formats.is_a?(Array) && ((formats - ['epub','mobi','pdf','mp3_in_zip']) != [] || (formats & ['epub','mobi','pdf','mp3_in_zip']).count < 1)
       formats = formats.join(",") if formats.is_a?(Array)
       raise ParametersError.new if delivery_form && formats != 'mp3_in_zip'
