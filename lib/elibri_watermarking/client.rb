@@ -87,8 +87,7 @@ module ElibriWatermarking
       req = request_class.new(uri.path)
       req.set_form_data(data)
       http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = true
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      http.use_ssl = true if uri.scheme == "https"
       res = http.start {|http| http.request(req) }
       return validate_response(res)
     end
@@ -97,7 +96,7 @@ module ElibriWatermarking
       if action[0] == "/"
         uri = URI("#{server}#{action}")
       else
-        uri = URI("#{server}/transactional_api/#{action}")
+        uri = URI("#{server}/watermarking/#{action}")
       end
       logger.info("trying #{uri}") if logger
       begin
