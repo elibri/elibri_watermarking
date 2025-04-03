@@ -19,6 +19,13 @@ module ElibriWatermarking
       self.server = server || "https://www.elibri.com.pl"
     end
 
+    def widget(trans_id)
+      construct_url('widget') do |uri|
+        data = { trans_id: trans_id }
+        return get_response_from_server(uri, data, Net::HTTP::Post)
+      end
+    end
+
     def watermark(ident, formats:, visible_watermark:, client_symbol: nil, price: nil, promotion_id: nil, low_priority: false)
       if ident =~ /^[0-9]+$/ && ident.size == 13
         ident_type = 'isbn'
